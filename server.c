@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     //reply to client
     n = write(newsockfd, "I got your message", 18);
     if (n < 0) error("ERROR writing to socket");
-
+    write(1, "\ntest\n", 6);
     close(newsockfd);  // close connection
     close(sockfd);
 
