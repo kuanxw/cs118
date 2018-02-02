@@ -1,0 +1,3 @@
+Needed to zero the write buffer otherwise the data possibly would be written twice to the page.
+
+HTML file written to browser as raw HTML code. Added HTTP header and the HTML displayed correctly
