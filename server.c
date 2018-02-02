@@ -63,9 +63,12 @@ int main(int argc, char *argv[])
     printf("Here is the message: %s\n", buffer);
 
     //reply to client
-    n = write(newsockfd, "I got your message", 18);
+    n = write(newsockfd, "HTTP/1.1 200 OK\r\n\r\nI got your message hopefully.", 52);
+
     if (n < 0) error("ERROR writing to socket");
+
     write(1, "\ntest\n", 6);
+    
     close(newsockfd);  // close connection
     close(sockfd);
 
