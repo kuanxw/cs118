@@ -12,7 +12,7 @@
 #include <string.h>
 #include <signal.h>  /* signal name macros, and the kill() prototype */
 
-// small change
+
 void error(char *msg)
 {
     perror(msg);
