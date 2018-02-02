@@ -56,18 +56,18 @@ int main(int argc, char *argv[])
     char buffer[256];
 
     memset(buffer, 0, 256);  // reset memory
+    while (n) {
+        //read client's message
+        n = read(newsockfd, buffer, 255);
+        if (n < 0) error("ERROR reading from socket");
+        printf("Here is the message: %s\n", buffer);
+    }
 
-    //read client's message
-    n = read(newsockfd, buffer, 255);
-    if (n < 0) error("ERROR reading from socket");
-    printf("Here is the message: %s\n", buffer);
 
     //reply to client
     n = write(newsockfd, "HTTP/1.1 200 OK\r\n\r\nI got your message hopefully.", 52);
 
     if (n < 0) error("ERROR writing to socket");
-
-    write(1, "\ntest\n", 6);
     
     close(newsockfd);  // close connection
     close(sockfd);
