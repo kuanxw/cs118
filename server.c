@@ -4,6 +4,7 @@
    process for each connection
 */
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/types.h>   // definitions of a number of data types used in socket.h and netinet/in.h
 #include <sys/socket.h>  // definitions of structures needed for sockets, e.g. sockaddr
 #include <netinet/in.h>  // constants and structures needed for internet domain addresses, e.g. sockaddr_in
@@ -73,13 +74,19 @@ int main(int argc, char *argv[])
     int file_descriptor; 
     file_descriptor = open("index.html", O_RDONLY);
 
-    char* wrbuf[512];
+    char wrbuf[512];
+    bzero(wrbuf, sizeof(wrbuf));
+
+    char* header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+    write(newsockfd, header, strlen(header));
 
     while (1) {
+
         int num_chars_read = read(file_descriptor, wrbuf, 512);
 
         //reply to client
         n = write(newsockfd, wrbuf, strlen(wrbuf));
+	bzero(wrbuf, sizeof(wrbuf));
         if (n < 0) error("ERROR writing to socket");
         if (num_chars_read == 0) {
             break;
