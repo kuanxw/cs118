@@ -22,6 +22,7 @@ void error(char *msg)
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, portno;
+    int process_id;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
 
@@ -44,30 +45,45 @@ int main(int argc, char *argv[])
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
         error("ERROR on binding");
 
-    listen(sockfd, 5);  // 5 simultaneous connection at most
+    if (listen(sockfd, 10) < 0) {
+        error("listen failed");
+    }  // 5 simultaneous connection at most
 
     //accept connections
     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 
     if (newsockfd < 0)
-     error("ERROR on accept");
+        error("ERROR on accept");
 
+    // SERVER request and response
     int n;
-    char buffer[256];
+    char buffer[2048];
+    char fn[1024];
 
-    memset(buffer, 0, 256);  // reset memory
-    while (n) {
-        //read client's message
-        n = read(newsockfd, buffer, 255);
-        if (n < 0) error("ERROR reading from socket");
-        printf("Here is the message: %s\n", buffer);
+    memset(buffer, 0, 2048);  // reset memory
+    memset(fn, 0, 1024); // reset file name
+
+    //read client's message
+    n = read(newsockfd, buffer, 2047);
+    if (n < 0) error("ERROR reading from socket");
+    printf("Here is the message: %s\n", buffer);
+    
+
+    int file_descriptor; 
+    file_descriptor = open("index.html", O_RDONLY);
+
+    wrbuf[512];
+
+    while (1) {
+        int num_chars_read = read(wrbuf, 512, file_descriptor);
+
+        //reply to client
+        n = write(newsockfd, wrbuf, strlen(wrbuf));
+        if (n < 0) error("ERROR writing to socket");
+        if (num_chars_read == 0) {
+            break;
+        }
     }
-
-
-    //reply to client
-    n = write(newsockfd, "200 OK\r\n\r\nI got your message hopefully.", 50);
-
-    if (n < 0) error("ERROR writing to socket");
     
     close(newsockfd);  // close connection
     close(sockfd);
