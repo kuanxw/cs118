@@ -9,7 +9,17 @@
 #include <sys/stat.h>
 #include <signal.h>  /* signal name macros, and the kill() prototype */
 
+int sockfd, newsockfd, portno;
+
 char* content_type;
+char* content_response_code;
+size_t content_length;
+
+void error(char *msg)
+{
+    perror(msg);
+    exit(1);
+}
 
 int parse_file_req(char* buf){
     char filename[2048];
@@ -46,18 +56,68 @@ int parse_file_req(char* buf){
     else content_type = "application/octet-stream";
     //Import file
     int fd = open(filename, O_RDONLY);
+    if(fd < 0){
+        content_response_code = "404 Not Found";
+        if((fd = open("404.html",O_RDONLY)) < 0){
+            error("404 File is also not found\n");
+        }
+        content_type = "text/html";
+    } else {
+        content_response_code = "200 OK";
+    }
+    struct stat s;
+    if (fstat(fd,&s) < 0){
+         error("fstat() failed");
+    }
+    content_length = s.st_size;
     return fd;
 }
 
-void error(char *msg)
-{
-    perror(msg);
-    exit(1);
+//Responds to one HTTP GET request
+void respond(){
+    int n;
+    char in_buffer[2048];
+    char fn[1024];
+    char header[2048];
+    char wrbuf[512];
+    bzero(wrbuf, sizeof(wrbuf));
+
+    memset(in_buffer, 0, 2048);  // reset memory
+    memset(fn, 0, 1024); // reset file name
+    memset(header,0,2048); //reset header memory
+
+    //read client's message
+    n = read(newsockfd, in_buffer, 2047);
+    if (n < 0) error("ERROR reading from socket");
+    printf("Here is the message: %s\n", in_buffer);
+    
+    //Extract file name, get its file descriptor, and modify content_type
+    int fd = parse_file_req(in_buffer);
+
+    strcat(header,"HTTP/1.1 ");
+    strcat(header,content_response_code);
+    strcat(header,"\r\nContent-Type: ");
+    strcat(header,content_type);
+    strcat(header,"\r\nContent-Length: ");
+    sprintf(header + strlen(header),"%d",content_length);
+    strcat(header,"\r\n\r\n");
+    write(newsockfd, header, strlen(header));
+
+    while (1) {
+        int num_chars_read = read(fd, wrbuf, 512);
+
+        //reply to client
+        n = write(newsockfd, wrbuf, strlen(wrbuf));
+	bzero(wrbuf, sizeof(wrbuf));
+        if (n < 0) error("ERROR writing to socket");
+        if (num_chars_read == 0) {
+            break;
+        }
+    }
 }
 
 int main(int argc, char *argv[])
 {
-    int sockfd, newsockfd, portno;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
 
@@ -91,48 +151,7 @@ int main(int argc, char *argv[])
         error("ERROR on accept");
 
     // SERVER request and response
-    int n;
-    char in_buffer[2048];
-    char fn[1024];
-    char header[2048];
-    char wrbuf[512];
-    bzero(wrbuf, sizeof(wrbuf));
-
-    memset(in_buffer, 0, 2048);  // reset memory
-    memset(fn, 0, 1024); // reset file name
-    memset(header,0,2048); //reset header memory
-
-    //read client's message
-    n = read(newsockfd, in_buffer, 2047);
-    if (n < 0) error("ERROR reading from socket");
-    printf("Here is the message: %s\n", in_buffer);
-    
-    //Extract file name, get its file descriptor, and modify content_type
-    int fd = parse_file_req(in_buffer);
-    if(fd < 0){
-        strcat(header,"HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n");
-        if((fd = open("404.html",O_RDONLY)) < 0){
-            printf("404 File is also not found\n");
-            return 1;
-        }
-    } else {
-        strcat(header,"HTTP/1.1 200 OK\r\nContent-Type: ");
-        strcat(header,content_type);
-        strcat(header,"\r\n\r\n");
-    }
-    write(newsockfd, header, strlen(header));
-
-    while (1) {
-        int num_chars_read = read(fd, wrbuf, 512);
-
-        //reply to client
-        n = write(newsockfd, wrbuf, strlen(wrbuf));
-	bzero(wrbuf, sizeof(wrbuf));
-        if (n < 0) error("ERROR writing to socket");
-        if (num_chars_read == 0) {
-            break;
-        }
-    }
+    respond();
     
     close(newsockfd);  // close connection
     close(sockfd);
