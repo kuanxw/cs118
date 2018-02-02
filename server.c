@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
 
     //reply to client
-    n = write(newsockfd, "HTTP/1.1 200 OK\r\n\r\nI got your message hopefully.", 52);
+    n = write(newsockfd, "200 OK\r\n\r\nI got your message hopefully.", 50);
 
     if (n < 0) error("ERROR writing to socket");
     
