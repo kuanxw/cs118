@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <signal.h>  /* signal name macros, and the kill() prototype */
 
 
@@ -72,10 +73,10 @@ int main(int argc, char *argv[])
     int file_descriptor; 
     file_descriptor = open("index.html", O_RDONLY);
 
-    wrbuf[512];
+    char* wrbuf[512];
 
     while (1) {
-        int num_chars_read = read(wrbuf, 512, file_descriptor);
+        int num_chars_read = read(file_descriptor, wrbuf, 512);
 
         //reply to client
         n = write(newsockfd, wrbuf, strlen(wrbuf));
