@@ -1,3 +1,32 @@
 Needed to zero the write buffer otherwise the data possibly would be written twice to the page.
 
 HTML file written to browser as raw HTML code. Added HTTP header and the HTML displayed correctly
+
+
+SECTION: Description of Server Design
+We used a single file “server.c” that, when run, starts a webserver. It is non-persistent – the server only handles a single HTTP request and then returns. We have also provided “index.html” and “404.html” to handle the default and File DNE cases.
+The server awaits a HTTP GET request, and returns a single HTTP response. To request a file from the server, type “(IP ADDRESS):(PORT NO.)/(FILENAME)” into an up-to-date Firefox browser. It can return the following filetypes: *.htm/*.html, *.jpg/*.jpeg file, *.gif file. If the filename is nonempty but has does not have any of the above filetypes, it returns a binary file that prompts a download. If the field is empty, it looks to download “index.html”. If the file is not found, it returns “404.html with a 404 error”.
+After it serves a request, the server closes all sockets and returns/shuts down. To retrieve another file, the server binary should be run again.
+High-level functions details:
+main(): Sets up socket connection and starts server (based entirely off sample code). Calls response() and closes socket and returns right after.
+error (called by every other high-level function): Simple error handling function that prints a message to stderr and exits.
+parse_file_req(): (Parse File Request) Parses the HTML GET request and prepares the file to send to client. Also sets string values for parts of the HTTP response header. Steps:
+1)	Extracts the string (the filename) between “GET /” and “HTTP/1.1\r\n”
+   a.	If string is empty, transform string to “index.html”
+2)	Replaces “%20” in the string with spacebars
+3)	Finds the file type of that string, turns it into lowercase, then prepare the suitable string for the Content-Type field in the HTTP response header.
+4)	Try to import the file (with lowercase file type) and prepare the file descriptor.
+  a.	Also prepares the HTTP response code (eg. 200 OK, 404 Not Found)
+  b.	If import fails, change the file to upload to 404.html
+5)	Find the size of that file
+6)	Returns the file descriptor (int)
+response(): Handles server input/output. Calls parse_file_req()
+Steps:
+1)	Reads the HTTP GET request from the client into a buffer.
+2)	Passes that buffer into parse_file_req(). 
+  a.	parse_file_req() will set global values content_type, content_length, and content_response_code
+3)	Writes the HTTP Header using the global variables above.
+4)	Reads from the opened file to a buffer with size equal the file size
+5)	Writes the buffer into the socket
+6)	Returns.
+
