@@ -5,7 +5,7 @@
    We have also provided “index.html” and “404.html” to handle the default and File DNE cases.
    The server awaits a HTTP GET request, and returns a single HTTP response. 
    To request a file from the server, type “(IP ADDRESS):(PORT NO.)/(FILENAME)” into an up-to-date Firefox browser. 
-   It can return the following filetypes: *.htm/*.html, *.jpg/*.jpeg file, *.gif file. 
+   It can return the following filetypes: htm/html, jpg/jpeg file, gif file. 
    If the filename is nonempty but has does not have any of the above filetypes, it returns a binary file that prompts a download. 
    If the field is empty, it looks to download “index.html”. 
    If the file is not found, it returns “404.html with a 404 error”.
