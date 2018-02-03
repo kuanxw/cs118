@@ -120,6 +120,7 @@ printf("%s\n",header);
     char* wrbuf = (char*) malloc(sizeof(char)*content_length);
     read(fd, wrbuf, content_length);
     write(newsockfd, wrbuf, content_length);
+    close(fd);
 }
 
 int main(int argc, char *argv[])
