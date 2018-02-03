@@ -1,4 +1,4 @@
-/* By Kuan Xiang Wen and Josh Cambanera, Feb 2018
+/* By Kuan Xiang Wen and Josh Camarena, Feb 2018
    CS118 Project 1
 */
 #include <stdio.h>
@@ -32,7 +32,7 @@ int parse_file_req(char* buf){
     char* fn_end = strstr(buf," HTTP/1.1\r\n");
     size_t fn_size = (fn_end - fn_start)/sizeof(char);
     if(fn_size < 0 || fn_size > 2048){
-        printf("Invalid file name size: %d\n",fn_size);
+        printf("Invalid file name size: %d\n", (int) fn_size);
         exit(0);
     }
     //Special case: No/Default file requested index.html 
@@ -52,18 +52,23 @@ int parse_file_req(char* buf){
     }
 
     //Extract file type
-    marker = strrchr(filename,'.')+1; //Get filetype substring
+    marker = strrchr(filename,'.'); //Get filetype substring 
+    if (marker == NULL) {
+        content_type = "application/octet-stream";
+    } else {
+        marker = marker +1;
+    
        //"Case Insensitive". Make all filetype char lowercase
-    int i = 0;
-    for(;i<strlen(marker);i++){
-        if(*(marker+i)>64 && *(marker+i) < 91) *(marker+i) = *(marker+i)+32;
+        int i = 0;
+        for(;i<strlen(marker);i++){
+            if(*(marker+i)>64 && *(marker+i) < 91) *(marker+i) = *(marker+i)+32;
+        }
+        //Actual comparison to append to content_type
+        if(strcmp(marker,"html")==0 || strcmp(marker,"htm")==0) content_type = "text/html";
+        else if(strcmp(marker,"jpg")==0 || strcmp(marker,"jpeg")==0) content_type = "image/jpeg";
+        else if(strcmp(marker,"gif")==0) content_type = "image/gif";
+        else content_type = "application/octet-stream";
     }
-    //Actual comparison to append to content_type
-    if(marker == NULL || strcmp(marker,"html")==0 || strcmp(marker,"htm")==0) content_type = "text/html";
-    else if(strcmp(marker,"jpg")==0 || strcmp(marker,"jpeg")==0) content_type = "image/jpeg";
-    else if(strcmp(marker,"gif")==0) content_type = "image/gif";
-    else content_type = "application/octet-stream";
-
     //Import file
     int fd = open(filename, O_RDONLY);
     if(fd < 0){//If fail to import, import 404 file
@@ -111,7 +116,7 @@ void respond(){
     strcat(header,"\r\nContent-Type: ");
     strcat(header,content_type);
     strcat(header,"\r\nContent-Length: ");
-    sprintf(header + strlen(header),"%d",content_length);
+    sprintf(header + strlen(header),"%d", (int) content_length);
     strcat(header,"\r\nConnection: Keep-Alive\r\n\r\n");
 printf("%s\n",header);
     write(newsockfd, header, strlen(header));//Write header
