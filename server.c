@@ -118,7 +118,7 @@ void respond(){
     strcat(header,"\r\nContent-Length: ");
     sprintf(header + strlen(header),"%d", (int) content_length);
     strcat(header,"\r\nConnection: Keep-Alive\r\n\r\n");
-printf("%s\n",header);
+   
     write(newsockfd, header, strlen(header));//Write header
 
     //Write file contents
