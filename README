@@ -1,2 +1,18 @@
+README
+
 Names: Kuan Xiang Wen, Josh Camarena
 ID: 004461554, 004454718
+
+
+1.	Download “004454718.tar.gz” into directory with the test files
+2.	Open a terminal and cd into the directory with the files
+3.	Untar the submission with tar -xzf 004454718.tar.gz
+4.	Run make to compile the “server” executable
+5.	To run the server, run "./server port"
+    where port is the port number the server will listen to
+6.	Open a web browser on the same machine,
+    and enter 127.0.0.1:port/filename to open the filename in the web browser.
+  a.	text/HTML, jpg/jpeg, and gif files will be opened in the web browser. 
+      Binaries files without extensions will prompt the user to download them
+7.	The server is not persistent. 
+    Loop through steps 5 and 6 with different port numbers to test different files.
