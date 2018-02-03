@@ -106,7 +106,7 @@ void respond(){
     //read client's message
     n = read(newsockfd, in_buffer, 2047);
     if (n < 0) error("ERROR reading from socket");
-    printf("Here is the message: %s\n", in_buffer);
+    printf("%s\n", in_buffer);
     
     //Extract file name, get its file descriptor, and modify content_type
     int fd = parse_file_req(in_buffer);
