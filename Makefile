@@ -2,6 +2,7 @@ CC=gcc
 CPPFLAGS=-g -Wall
 USERID=004454718
 CLASSES=
+FILES=server.c 404.html index.html Makefile README report.pdf
 
 all: server
 
@@ -16,4 +17,4 @@ clean:
 dist: tarball
 
 tarball: clean
-	tar -cvzf /tmp/$(USERID).tar.gz --exclude=./.vagrant . && mv /tmp/$(USERID).tar.gz .
+	tar -cvzf $(USERID).tar.gz $(FILES)
