@@ -1,3 +1,6 @@
+/* By Kuan Xiang Wen and Josh Cambanera, Feb 2018
+   CS118 Project 1
+*/
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>   // definitions of a number of data types used in socket.h and netinet/in.h
@@ -47,16 +50,23 @@ int parse_file_req(char* buf){
         fn_size = fn_size - 2;
         memset(filename+fn_size*sizeof(char),0,2);
     }
-    //printf("File name: %s\n",filename);
+
     //Extract file type
-    marker = strrchr(filename,'.');
-    if(marker == NULL || strcmp(marker+1,"html")==0) content_type = "text/html";
-    else if(strcmp(marker+1,"jpg")==0) content_type = "image/jpeg";
-    else if(strcmp(marker+1,"gif")==0) content_type = "image/gif";
+    marker = strrchr(filename,'.')+1; //Get filetype substring
+       //"Case Insensitive". Make all filetype char lowercase
+    int i = 0;
+    for(;i<strlen(marker);i++){
+        if(*(marker+i)>64 && *(marker+i) < 91) *(marker+i) = *(marker+i)+32;
+    }
+    //Actual comparison to append to content_type
+    if(marker == NULL || strcmp(marker,"html")==0 || strcmp(marker,"htm")==0) content_type = "text/html";
+    else if(strcmp(marker,"jpg")==0 || strcmp(marker,"jpeg")==0) content_type = "image/jpeg";
+    else if(strcmp(marker,"gif")==0) content_type = "image/gif";
     else content_type = "application/octet-stream";
+
     //Import file
     int fd = open(filename, O_RDONLY);
-    if(fd < 0){
+    if(fd < 0){//If fail to import, import 404 file
         content_response_code = "404 Not Found";
         if((fd = open("404.html",O_RDONLY)) < 0){
             error("404 File is also not found\n");
@@ -65,11 +75,15 @@ int parse_file_req(char* buf){
     } else {
         content_response_code = "200 OK";
     }
+
+    //Extract file size using fstat()
     struct stat s;
     if (fstat(fd,&s) < 0){
          error("fstat() failed");
     }
     content_length = s.st_size;
+
+    //Return file descriptor
     return fd;
 }
 
@@ -79,8 +93,6 @@ void respond(){
     char in_buffer[2048];
     char fn[1024];
     char header[2048];
-    char wrbuf[512];
-    bzero(wrbuf, sizeof(wrbuf));
 
     memset(in_buffer, 0, 2048);  // reset memory
     memset(fn, 0, 1024); // reset file name
@@ -93,31 +105,25 @@ void respond(){
     
     //Extract file name, get its file descriptor, and modify content_type
     int fd = parse_file_req(in_buffer);
-
+    //Construct TCP header incrementally
     strcat(header,"HTTP/1.1 ");
     strcat(header,content_response_code);
     strcat(header,"\r\nContent-Type: ");
     strcat(header,content_type);
     strcat(header,"\r\nContent-Length: ");
     sprintf(header + strlen(header),"%d",content_length);
-    strcat(header,"\r\n\r\n");
-    write(newsockfd, header, strlen(header));
+    strcat(header,"\r\nConnection: Keep-Alive\r\n\r\n");
+printf("%s\n",header);
+    write(newsockfd, header, strlen(header));//Write header
 
-    while (1) {
-        int num_chars_read = read(fd, wrbuf, 512);
-
-        //reply to client
-        n = write(newsockfd, wrbuf, strlen(wrbuf));
-	bzero(wrbuf, sizeof(wrbuf));
-        if (n < 0) error("ERROR writing to socket");
-        if (num_chars_read == 0) {
-            break;
-        }
-    }
+    //Write file contents
+    char* wrbuf = (char*) malloc(sizeof(char)*content_length);
+    read(fd, wrbuf, content_length);
+    write(newsockfd, wrbuf, content_length);
 }
 
 int main(int argc, char *argv[])
-{
+{//Socket connection as provided by sample code
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
 
